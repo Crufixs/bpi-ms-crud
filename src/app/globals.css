@@ -7,11 +7,41 @@
   --foreground: #171717;
 }
 
+.crud-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #ddd;
+  font-family: Arial, sans-serif;
+  text-align: left;
+  margin: 0 auto;
+}
+
+.custom-table th,
+.custom-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+}
+
+.custom-table thead {
+  background-color: #f3f3f3;
+}
+
+.custom-table th {
+  font-size: 14px;
+  font-weight: bold;
+  color: #555;
+  text-transform: uppercase;
+}
+
+.custom-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  /* :root {
     --background: #0a0a0a;
     --foreground: #ededed;
-  }
+  } */
 }
 
 body {

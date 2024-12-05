@@ -1,101 +1,275 @@
-import Image from "next/image";
+"use client";
+import Modal from "@/components/Modal";
+import { useState, useMemo, useEffect } from "react";
+import { FaSort, FaSortDown, FaSortUp } from "react-icons/fa";
+
+const ModalStateEnum = Object.freeze({
+  DELETE: "DELETE",
+  ADD: "ADD",
+  EDIT: "EDIT",
+});
+
+const SortStateEnum = Object.freeze({
+  NAME_ASC: "NAME_ASC",
+  NAME_DSC: "NAME_DSC",
+  UNAME_ASC: "UNAME_ASC",
+  UNAME_DSC: "UNAME_DSC",
+  COUNTRY_ASC: "COUNTRY_ASC",
+  COUNTRY_DSC: "COUNTRY_DSC",
+  EMAIL_ASC: "EMAIL_ASC",
+  EMAIL_DSC: "EMAIL_DSC",
+});
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [employees, setEmployees] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [modalState, setModalState] = useState("DELETE");
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [sortState, setSortState] = useState(null);
+  const [pageSize, setPageSize] = useState(10);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const sortedEmployees = useMemo(() => {
+    const sorted = [...employees]; // Create a new array to avoid mutation
+
+    switch (sortState) {
+      case SortStateEnum.NAME_ASC:
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case SortStateEnum.NAME_DSC:
+        return sorted.sort((a, b) => b.name.localeCompare(a.name));
+      case SortStateEnum.UNAME_ASC:
+        return sorted.sort((a, b) => a.username.localeCompare(b.username));
+      case SortStateEnum.UNAME_DSC:
+        return sorted.sort((a, b) => b.username.localeCompare(a.username));
+      case SortStateEnum.COUNTRY_ASC:
+        return sorted.sort((a, b) => a.country.localeCompare(b.country));
+      case SortStateEnum.COUNTRY_DSC:
+        return sorted.sort((a, b) => b.country.localeCompare(a.country));
+      case SortStateEnum.EMAIL_ASC:
+        return sorted.sort((a, b) => a.email.localeCompare(b.email));
+      case SortStateEnum.EMAIL_DSC:
+        return sorted.sort((a, b) => b.email.localeCompare(a.email));
+      default:
+        return employees; // Return the original array if no sorting is applied
+    }
+  }, [employees, sortState]);
+
+  useEffect(() => {
+    setEmployees(generateDummyData(100));
+  }, []);
+
+  useEffect(() => {
+    console.log("TESTRAWR sortedEmployees", sortedEmployees);
+  }, [sortedEmployees]);
+  function generateDummyData(amount) {
+    const names = [
+      "John Doe",
+      "Jane Smith",
+      "Alice Johnson",
+      "Chris Evans",
+      "Michael Brown",
+      "Emily Davis",
+      "Sarah Wilson",
+      "James Anderson",
+    ];
+    const countries = ["Philippines", "USA", "Canada", "Australia", "India"];
+    const emailDomains = ["example.com", "mail.com", "test.com"];
+    const accountTypes = ["Team Member", "Admin", "Viewer"];
+
+    const dummyData = Array.from({ length: amount }, (_, index) => {
+      const randomName = names[Math.floor(Math.random() * names.length)];
+      const [firstName, lastName] = randomName.split(" ");
+      const username = `P${Math.floor(100000 + Math.random() * 900000)}`;
+      const country = countries[Math.floor(Math.random() * countries.length)];
+      const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${
+        emailDomains[Math.floor(Math.random() * emailDomains.length)]
+      }`;
+      const accountType =
+        accountTypes[Math.floor(Math.random() * accountTypes.length)];
+
+      return {
+        id: index + 1,
+        name: randomName,
+        username: username,
+        country: country,
+        email: email,
+        accountType: accountType,
+        photo: "No image available",
+      };
+    });
+
+    return dummyData;
+  }
+
+  const handleDisplayAddModal = () => {
+    setShowModal(true);
+    setModalState(ModalStateEnum.ADD);
+  };
+
+  const handleDisplayEditModal = (employee) => {
+    setShowModal(true);
+    setModalState(ModalStateEnum.EDIT);
+    setSelectedEmployee(employee);
+  };
+
+  return (
+    <div>
+      <main>
+        <div className="w-full p-5 border-b ">Employee: Records</div>
+        <div className="w-full p-5 flex justify-end">
+          <button
+            onClick={() => handleDisplayAddModal()}
+            className="p-2 py-3 bg-blue-600 text-white"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            ADD EMPLOYEE
+          </button>
+        </div>
+        <div className="overflow-x-auto p-3 m-2 border">
+          <div className="w-full flex justify-between p-2">
+            <div>
+              Show{" "}
+              <select onClick={(e) => setPageSize(parseInt(e.target.value))}className="inline border rounded py-1">
+                <option>10</option>
+                <option>20</option>
+                <option>50</option>
+              </select>{" "}
+              entries
+            </div>
+            <div>Search</div>
+          </div>
+          <table className="custom-table w-full">
+            <thead>
+              <tr>
+                <th>Photo </th>
+                <th>
+                  <div
+                    className="flex items-center justify-center"
+                    onClick={() =>
+                      setSortState((curr) =>
+                        curr === null
+                          ? SortStateEnum.NAME_DSC
+                          : curr === SortStateEnum.NAME_DSC
+                          ? SortStateEnum.NAME_ASC
+                          : null
+                      )
+                    }
+                  >
+                    Name
+                    {sortState === SortStateEnum.NAME_ASC ? (
+                      <FaSortUp className="inline" />
+                    ) : sortState === SortStateEnum.NAME_DSC ? (
+                      <FaSortDown className="inline" />
+                    ) : (
+                      <FaSort className="inline" />
+                    )}
+                  </div>
+                </th>
+                <th>
+                  {" "}
+                  <div
+                    className="flex items-center justify-center"
+                    onClick={() =>
+                      setSortState((curr) =>
+                        curr === null
+                          ? SortStateEnum.UNAME_DSC
+                          : curr === SortStateEnum.UNAME_DSC
+                          ? SortStateEnum.UNAME_ASC
+                          : null
+                      )
+                    }
+                  >
+                    Username
+                    {sortState === SortStateEnum.UNAME_ASC ? (
+                      <FaSortUp className="inline" />
+                    ) : sortState === SortStateEnum.UNAME_DSC ? (
+                      <FaSortDown className="inline" />
+                    ) : (
+                      <FaSort className="inline" />
+                    )}
+                  </div>
+                </th>
+                <th>
+                  {" "}
+                  <div
+                    className="flex items-center justify-center"
+                    onClick={() =>
+                      setSortState((curr) =>
+                        curr === null
+                          ? SortStateEnum.COUNTRY_DSC
+                          : curr === SortStateEnum.COUNTRY_DSC
+                          ? SortStateEnum.COUNTRY_ASC
+                          : null
+                      )
+                    }
+                  >
+                    Country
+                    {sortState === SortStateEnum.COUNTRY_ASC ? (
+                      <FaSortUp className="inline" />
+                    ) : sortState === SortStateEnum.COUNTRY_DSC ? (
+                      <FaSortDown className="inline" />
+                    ) : (
+                      <FaSort className="inline" />
+                    )}
+                  </div>
+                </th>
+                <th>
+                  {" "}
+                  <div
+                    className="flex items-center justify-center"
+                    onClick={() =>
+                      setSortState((curr) =>
+                        curr === null
+                          ? SortStateEnum.EMAIL_DSC
+                          : curr === SortStateEnum.EMAIL_DSC
+                          ? SortStateEnum.EMAIL_ASC
+                          : null
+                      )
+                    }
+                  >
+                    Email
+                    {sortState === SortStateEnum.EMAIL_ASC ? (
+                      <FaSortUp className="inline" />
+                    ) : sortState === SortStateEnum.EMAIL_DSC ? (
+                      <FaSortDown className="inline" />
+                    ) : (
+                      <FaSort className="inline" />
+                    )}
+                  </div>
+                </th>
+                <th>Account Type</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedEmployees.map((employee) => (
+                <tr key={employee.username}>
+                  <td>
+                    <div>{employee.photo}</div>
+                  </td>
+                  <td>{employee.name}</td>
+                  <td>{employee.username}</td>
+                  <td>{employee.country}</td>
+                  <td>{employee.email}</td>
+                  <td>{employee.accountType} Member</td>
+                  <td>
+                    <button onClick={() => handleDisplayEditModal(employee)}>
+                      ✏️
+                    </button>
+                    <button>🗑️</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      {showModal && (
+        <Modal
+          header={
+            modalState === ModalStateEnum.ADD ? "Add Employee" : "Edit Emloyee"
+          }
+          setShowModal={setShowModal}
+        />
+      )}
     </div>
   );
 }
