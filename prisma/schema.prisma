@@ -14,11 +14,13 @@ generator client {
 }
 
 model Employee {
-  id          Int      @id @default(autoincrement())
-  photo       String
-  name        String
-  username    String   @unique
-  country     String
-  email       String   @unique
-  accountType String
+  id            String   @id @default(uuid())  // Using UUID as the ID
+  photo         String?
+  firstName     String
+  lastName      String
+  username      String
+  country       String
+  email         String
+  accountType   String
+  contactNumber String?
 }

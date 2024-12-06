@@ -1,5 +1,6 @@
 "use client";
 import Modal from "@/components/Modal";
+import DeleteModal from "@/components/DeleteModal";
 import { useState, useMemo, useEffect } from "react";
 import {
   FaArrowLeft,
@@ -7,29 +8,20 @@ import {
   FaSort,
   FaSortDown,
   FaSortUp,
+  FaRegEdit,
+  FaTrash,
 } from "react-icons/fa";
-import {
-  getEmployees,
-  createEmployee,
-  updateEmployee,
-  deleteEmployee,
-} from "../lib/apiClient";
+import { getEmployees } from "../lib/apiClient";
 
 export default function Home() {
   const [employees, setEmployees] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [modalState, setModalState] = useState("DELETE");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [sortState, setSortState] = useState(null);
   const [pageSize, setPageSize] = useState(10);
-  const [currentPageRange, setCurrentPageRange] = useState([0, 10]);
+  const [currentPageRange, setCurrentPageRange] = useState([0, 9]);
   const [searchKey, setSearchKey] = useState("");
-
-  const ModalStateEnum = Object.freeze({
-    DELETE: "DELETE",
-    ADD: "ADD",
-    EDIT: "EDIT",
-  });
 
   const SortStateEnum = Object.freeze({
     NAME_ASC: "NAME_ASC",
@@ -50,7 +42,9 @@ export default function Home() {
     // Filter users based on the presence of the keyword in any field
     return users.filter((user) => {
       return (
-        user.name.toLowerCase().includes(lowerCaseKeyword) ||
+        `${user.firstName} ${user.lastName}`
+          .toLowerCase()
+          .includes(lowerCaseKeyword) ||
         user.username.toLowerCase().includes(lowerCaseKeyword) ||
         user.country.toLowerCase().includes(lowerCaseKeyword) ||
         user.email.toLowerCase().includes(lowerCaseKeyword) ||
@@ -62,13 +56,13 @@ export default function Home() {
   useEffect(() => {
     switch (pageSize) {
       case 20:
-        setCurrentPageRange([0, 20]);
+        setCurrentPageRange([0, 19]);
         break;
       case 50:
-        setCurrentPageRange([0, 50]);
+        setCurrentPageRange([0, 49]);
         break;
       default:
-        setCurrentPageRange([0, 10]);
+        setCurrentPageRange([0, 9]);
 
         break;
     }
@@ -81,9 +75,17 @@ export default function Home() {
 
     switch (sortState) {
       case SortStateEnum.NAME_ASC:
-        return tempArr.sort((a, b) => a.name.localeCompare(b.name));
+        return tempArr.sort((a, b) =>
+          `${a.firstName} ${a.lastName}`.localeCompare(
+            `${b.firstName} ${b.lastName}`
+          )
+        );
       case SortStateEnum.NAME_DSC:
-        return tempArr.sort((a, b) => b.name.localeCompare(a.name));
+        return tempArr.sort((a, b) =>
+          `${b.firstName} ${b.lastName}`.localeCompare(
+            `${a.firstName} ${a.lastName}`
+          )
+        );
       case SortStateEnum.UNAME_ASC:
         return tempArr.sort((a, b) => a.username.localeCompare(b.username));
       case SortStateEnum.UNAME_DSC:
@@ -102,67 +104,77 @@ export default function Home() {
   }, [employees, sortState]);
 
   useEffect(() => {
-    setEmployees(generateDummyData(100));
+    fetchLatestData();
   }, []);
+
+  const fetchLatestData = async () => {
+    const fetchedEmployees = await getEmployees();
+    setEmployees(fetchedEmployees);
+  };
 
   useEffect(() => {
     console.log("TESTRAWR sortedEmployees", sortedEmployees);
   }, [sortedEmployees]);
-  function generateDummyData(amount) {
-    const names = [
-      "John Doe",
-      "Jane Smith",
-      "Alice Johnson",
-      "Chris Evans",
-      "Michael Brown",
-      "Emily Davis",
-      "Sarah Wilson",
-      "James Anderson",
-    ];
-    const countries = ["Philippines", "USA", "Canada", "Australia", "India"];
-    const emailDomains = ["example.com", "mail.com", "test.com"];
-    const accountTypes = ["Team Member", "Admin", "Viewer"];
 
-    const dummyData = Array.from({ length: amount }, (_, index) => {
-      const randomName = names[Math.floor(Math.random() * names.length)];
-      const [firstName, lastName] = randomName.split(" ");
-      const username = `P${Math.floor(100000 + Math.random() * 900000)}`;
-      const country = countries[Math.floor(Math.random() * countries.length)];
-      const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${
-        emailDomains[Math.floor(Math.random() * emailDomains.length)]
-      }`;
-      const accountType =
-        accountTypes[Math.floor(Math.random() * accountTypes.length)];
+  // function generateDummyData(amount) {
+  //   const names = [
+  //     "John Doe",
+  //     "Jane Smith",
+  //     "Alice Johnson",
+  //     "Chris Evans",
+  //     "Michael Brown",
+  //     "Emily Davis",
+  //     "Sarah Wilson",
+  //     "James Anderson",
+  //   ];
+  //   const countries = ["Philippines", "USA", "Canada", "Australia", "India"];
+  //   const emailDomains = ["example.com", "mail.com", "test.com"];
+  //   const accountTypes = ["Team Member", "Admin", "Viewer"];
 
-      return {
-        id: index + 1,
-        name: randomName,
-        username: username,
-        country: country,
-        email: email,
-        accountType: accountType,
-        photo: "No image available",
-      };
-    });
+  //   const dummyData = Array.from({ length: amount }, (_, index) => {
+  //     const randomName = names[Math.floor(Math.random() * names.length)];
+  //     const [firstName, lastName] = randomName.split(" ");
+  //     const username = `P${Math.floor(100000 + Math.random() * 900000)}`;
+  //     const country = countries[Math.floor(Math.random() * countries.length)];
+  //     const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${
+  //       emailDomains[Math.floor(Math.random() * emailDomains.length)]
+  //     }`;
+  //     const accountType =
+  //       accountTypes[Math.floor(Math.random() * accountTypes.length)];
 
-    return dummyData;
-  }
+  //     return {
+  //       id: index + 1,
+  //       name: randomName,
+  //       username: username,
+  //       country: country,
+  //       email: email,
+  //       accountType: accountType,
+  //     };
+  //   });
+
+  //   return dummyData;
+  // }
 
   const handleDisplayAddModal = () => {
     setShowModal(true);
-    setModalState(ModalStateEnum.ADD);
   };
 
   const handleDisplayEditModal = (employee) => {
     setShowModal(true);
-    setModalState(ModalStateEnum.EDIT);
+    setSelectedEmployee(employee);
+  };
+
+  const handleDisplayDeleteModal = (employee) => {
+    setShowDeleteModal(true);
     setSelectedEmployee(employee);
   };
 
   return (
     <div>
       <main className="h-screen flex flex-col">
-        <div className="w-full p-5 border-b ">Employee: Records</div>
+        <div className="w-full text-xl p-5 border-b text-cyan-700">
+          Employee: <span className="text-blue-500">Records</span>
+        </div>
         <div className="w-full p-5 flex justify-end">
           <button
             onClick={() => handleDisplayAddModal()}
@@ -308,21 +320,38 @@ export default function Home() {
                     currentPageRange[1]
                   ),
                   searchKey
-                ).map((employee) => (
-                  <tr key={employee.username}>
+                ).map((employee, index) => (
+                  <tr key={index + employee.username}>
                     <td>
-                      <div>{employee.photo}</div>
+                      {employee.photo && (
+                        <img
+                          src={employee.photo}
+                          alt={employee.name}
+                          className="w-28 h-28 object-cover"
+                        />
+                      )}
                     </td>
-                    <td>{employee.name}</td>
+                    <td>
+                      {employee.firstName} {employee.lastName}
+                    </td>
                     <td>{employee.username}</td>
                     <td>{employee.country}</td>
                     <td>{employee.email}</td>
-                    <td>{employee.accountType} Member</td>
+                    <td>{employee.accountType}</td>
                     <td>
-                      <button onClick={() => handleDisplayEditModal(employee)}>
-                        ✏️
+                      <button
+                        className="text-white p-5 bg-amber-400"
+                        onClick={() => handleDisplayEditModal(employee)}
+                      >
+                        <FaRegEdit />
                       </button>
-                      <button>🗑️</button>
+                      <button
+                        className="ml-2 text-white p-5 bg-red-500"
+                        onClick={() => handleDisplayDeleteModal(employee)}
+                      >
+                        {" "}
+                        <FaTrash />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -343,8 +372,8 @@ export default function Home() {
             />
           )}
           Page {Math.floor(currentPageRange[0] / pageSize) + 1} out of{" "}
-          {Math.floor(sortedEmployees.length / pageSize)}
-          {!(currentPageRange[1] + pageSize > sortedEmployees.length) && (
+          {Math.floor(sortedEmployees.length / (pageSize + 1)) + 1}
+          {!(currentPageRange[0] + pageSize >= sortedEmployees.length) && (
             <FaArrowRight
               className="inline mx-2 cursor-pointer"
               onClick={() =>
@@ -359,10 +388,18 @@ export default function Home() {
       </main>
       {showModal && (
         <Modal
-          header={
-            modalState === ModalStateEnum.ADD ? "Add Employee" : "Edit Emloyee"
-          }
           setShowModal={setShowModal}
+          selectedEmployee={selectedEmployee}
+          setSelectedEmployee={setSelectedEmployee}
+          fetchLatestData={fetchLatestData}
+        />
+      )}
+      {showDeleteModal && (
+        <DeleteModal
+          setShowDeleteModal={setShowDeleteModal}
+          selectedEmployee={selectedEmployee}
+          setSelectedEmployee={setSelectedEmployee}
+          fetchLatestData={fetchLatestData}
         />
       )}
     </div>
