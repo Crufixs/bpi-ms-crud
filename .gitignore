@@ -21,8 +21,10 @@
 /build
 
 # database
-/prisma/*.db         # Exclude local SQLite database (if using SQLite)
-/prisma/migrations    # Exclude Prisma migration files
+/prisma/*.db
+/prisma/*.db-journal
+/prisma/migrations/
+/public/storage/*
 
 # misc
 .DS_Store
