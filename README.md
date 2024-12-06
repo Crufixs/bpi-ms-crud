@@ -19,7 +19,7 @@ Next, set up Prisma by running the following command to create the database and 
 npx prisma migrate dev --name init
 ```
 
-Make sure to create the publicstorage directory where uploaded images will be saved:
+Make sure to create the public/storage directory where uploaded images will be saved:
 
 ```bash
 mkdir public/storage
