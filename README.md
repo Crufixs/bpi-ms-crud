@@ -25,9 +25,12 @@ Make sure to create the publicstorage directory where uploaded images will be sa
 mkdir public/storage
 ```
 
-Then run the app using:
+Finally, run the Next.js development server with:
 
 ```bash
 npm run dev
 ```
+
+The app will be available at http://localhost:3000. You can access the Employee Directory app and test the functionality.
+
 
