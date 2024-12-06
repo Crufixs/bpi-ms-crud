@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma";
 const STORAGE_PATH = process.env.STORAGE_PATH || "./storage";
 
 export async function PUT(request, { params }) {
-  const { id } = params;
+  const { id } = await params;
   const existing = await prisma.employee.findUnique({
     where: { id: String(id) },
   });
