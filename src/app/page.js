@@ -8,6 +8,12 @@ import {
   FaSortDown,
   FaSortUp,
 } from "react-icons/fa";
+import {
+  getEmployees,
+  createEmployee,
+  updateEmployee,
+  deleteEmployee,
+} from "../lib/apiClient";
 
 export default function Home() {
   const [employees, setEmployees] = useState([]);
