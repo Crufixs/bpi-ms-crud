@@ -1,24 +1,13 @@
 "use client";
 import Modal from "@/components/Modal";
 import { useState, useMemo, useEffect } from "react";
-import { FaSort, FaSortDown, FaSortUp } from "react-icons/fa";
-
-const ModalStateEnum = Object.freeze({
-  DELETE: "DELETE",
-  ADD: "ADD",
-  EDIT: "EDIT",
-});
-
-const SortStateEnum = Object.freeze({
-  NAME_ASC: "NAME_ASC",
-  NAME_DSC: "NAME_DSC",
-  UNAME_ASC: "UNAME_ASC",
-  UNAME_DSC: "UNAME_DSC",
-  COUNTRY_ASC: "COUNTRY_ASC",
-  COUNTRY_DSC: "COUNTRY_DSC",
-  EMAIL_ASC: "EMAIL_ASC",
-  EMAIL_DSC: "EMAIL_DSC",
-});
+import {
+  FaArrowLeft,
+  FaArrowRight,
+  FaSort,
+  FaSortDown,
+  FaSortUp,
+} from "react-icons/fa";
 
 export default function Home() {
   const [employees, setEmployees] = useState([]);
@@ -27,29 +16,82 @@ export default function Home() {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [sortState, setSortState] = useState(null);
   const [pageSize, setPageSize] = useState(10);
+  const [currentPageRange, setCurrentPageRange] = useState([0, 10]);
+  const [searchKey, setSearchKey] = useState("");
+
+  const ModalStateEnum = Object.freeze({
+    DELETE: "DELETE",
+    ADD: "ADD",
+    EDIT: "EDIT",
+  });
+
+  const SortStateEnum = Object.freeze({
+    NAME_ASC: "NAME_ASC",
+    NAME_DSC: "NAME_DSC",
+    UNAME_ASC: "UNAME_ASC",
+    UNAME_DSC: "UNAME_DSC",
+    COUNTRY_ASC: "COUNTRY_ASC",
+    COUNTRY_DSC: "COUNTRY_DSC",
+    EMAIL_ASC: "EMAIL_ASC",
+    EMAIL_DSC: "EMAIL_DSC",
+  });
+
+  function searchUsers(users, keyword) {
+    // Normalize keyword to lowercase for case-insensitive matching
+    const lowerCaseKeyword = keyword.toLowerCase().trim();
+    if (keyword.length === 0) return users;
+
+    // Filter users based on the presence of the keyword in any field
+    return users.filter((user) => {
+      return (
+        user.name.toLowerCase().includes(lowerCaseKeyword) ||
+        user.username.toLowerCase().includes(lowerCaseKeyword) ||
+        user.country.toLowerCase().includes(lowerCaseKeyword) ||
+        user.email.toLowerCase().includes(lowerCaseKeyword) ||
+        user.accountType.toLowerCase().includes(lowerCaseKeyword)
+      );
+    });
+  }
+
+  useEffect(() => {
+    switch (pageSize) {
+      case 20:
+        setCurrentPageRange([0, 20]);
+        break;
+      case 50:
+        setCurrentPageRange([0, 50]);
+        break;
+      default:
+        setCurrentPageRange([0, 10]);
+
+        break;
+    }
+  }, [pageSize]);
 
   const sortedEmployees = useMemo(() => {
-    const sorted = [...employees]; // Create a new array to avoid mutation
+    if (!employees) return [];
+
+    const tempArr = [...employees];
 
     switch (sortState) {
       case SortStateEnum.NAME_ASC:
-        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+        return tempArr.sort((a, b) => a.name.localeCompare(b.name));
       case SortStateEnum.NAME_DSC:
-        return sorted.sort((a, b) => b.name.localeCompare(a.name));
+        return tempArr.sort((a, b) => b.name.localeCompare(a.name));
       case SortStateEnum.UNAME_ASC:
-        return sorted.sort((a, b) => a.username.localeCompare(b.username));
+        return tempArr.sort((a, b) => a.username.localeCompare(b.username));
       case SortStateEnum.UNAME_DSC:
-        return sorted.sort((a, b) => b.username.localeCompare(a.username));
+        return tempArr.sort((a, b) => b.username.localeCompare(a.username));
       case SortStateEnum.COUNTRY_ASC:
-        return sorted.sort((a, b) => a.country.localeCompare(b.country));
+        return tempArr.sort((a, b) => a.country.localeCompare(b.country));
       case SortStateEnum.COUNTRY_DSC:
-        return sorted.sort((a, b) => b.country.localeCompare(a.country));
+        return tempArr.sort((a, b) => b.country.localeCompare(a.country));
       case SortStateEnum.EMAIL_ASC:
-        return sorted.sort((a, b) => a.email.localeCompare(b.email));
+        return tempArr.sort((a, b) => a.email.localeCompare(b.email));
       case SortStateEnum.EMAIL_DSC:
-        return sorted.sort((a, b) => b.email.localeCompare(a.email));
+        return tempArr.sort((a, b) => b.email.localeCompare(a.email));
       default:
-        return employees; // Return the original array if no sorting is applied
+        return tempArr; // Return the original array if no sorting is applied
     }
   }, [employees, sortState]);
 
@@ -113,7 +155,7 @@ export default function Home() {
 
   return (
     <div>
-      <main>
+      <main className="h-screen flex flex-col">
         <div className="w-full p-5 border-b ">Employee: Records</div>
         <div className="w-full p-5 flex justify-end">
           <button
@@ -123,143 +165,190 @@ export default function Home() {
             ADD EMPLOYEE
           </button>
         </div>
-        <div className="overflow-x-auto p-3 m-2 border">
+        <div className="overflow-x-auto p-3 m-2 border flex flex-col">
           <div className="w-full flex justify-between p-2">
             <div>
               Show{" "}
-              <select onClick={(e) => setPageSize(parseInt(e.target.value))}className="inline border rounded py-1">
+              <select
+                onClick={(e) => setPageSize(parseInt(e.target.value))}
+                className="inline border rounded py-1"
+              >
                 <option>10</option>
                 <option>20</option>
                 <option>50</option>
               </select>{" "}
               entries
             </div>
-            <div>Search</div>
+            <div className="flex justify-center items-center">
+              <label className="text-sm font-medium text-gray-700 mr-2">
+                Search
+              </label>
+              <input
+                type="text"
+                value={searchKey}
+                onChange={(e) => setSearchKey(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-1 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
           </div>
-          <table className="custom-table w-full">
-            <thead>
-              <tr>
-                <th>Photo </th>
-                <th>
-                  <div
-                    className="flex items-center justify-center"
-                    onClick={() =>
-                      setSortState((curr) =>
-                        curr === null
-                          ? SortStateEnum.NAME_DSC
-                          : curr === SortStateEnum.NAME_DSC
-                          ? SortStateEnum.NAME_ASC
-                          : null
-                      )
-                    }
-                  >
-                    Name
-                    {sortState === SortStateEnum.NAME_ASC ? (
-                      <FaSortUp className="inline" />
-                    ) : sortState === SortStateEnum.NAME_DSC ? (
-                      <FaSortDown className="inline" />
-                    ) : (
-                      <FaSort className="inline" />
-                    )}
-                  </div>
-                </th>
-                <th>
-                  {" "}
-                  <div
-                    className="flex items-center justify-center"
-                    onClick={() =>
-                      setSortState((curr) =>
-                        curr === null
-                          ? SortStateEnum.UNAME_DSC
-                          : curr === SortStateEnum.UNAME_DSC
-                          ? SortStateEnum.UNAME_ASC
-                          : null
-                      )
-                    }
-                  >
-                    Username
-                    {sortState === SortStateEnum.UNAME_ASC ? (
-                      <FaSortUp className="inline" />
-                    ) : sortState === SortStateEnum.UNAME_DSC ? (
-                      <FaSortDown className="inline" />
-                    ) : (
-                      <FaSort className="inline" />
-                    )}
-                  </div>
-                </th>
-                <th>
-                  {" "}
-                  <div
-                    className="flex items-center justify-center"
-                    onClick={() =>
-                      setSortState((curr) =>
-                        curr === null
-                          ? SortStateEnum.COUNTRY_DSC
-                          : curr === SortStateEnum.COUNTRY_DSC
-                          ? SortStateEnum.COUNTRY_ASC
-                          : null
-                      )
-                    }
-                  >
-                    Country
-                    {sortState === SortStateEnum.COUNTRY_ASC ? (
-                      <FaSortUp className="inline" />
-                    ) : sortState === SortStateEnum.COUNTRY_DSC ? (
-                      <FaSortDown className="inline" />
-                    ) : (
-                      <FaSort className="inline" />
-                    )}
-                  </div>
-                </th>
-                <th>
-                  {" "}
-                  <div
-                    className="flex items-center justify-center"
-                    onClick={() =>
-                      setSortState((curr) =>
-                        curr === null
-                          ? SortStateEnum.EMAIL_DSC
-                          : curr === SortStateEnum.EMAIL_DSC
-                          ? SortStateEnum.EMAIL_ASC
-                          : null
-                      )
-                    }
-                  >
-                    Email
-                    {sortState === SortStateEnum.EMAIL_ASC ? (
-                      <FaSortUp className="inline" />
-                    ) : sortState === SortStateEnum.EMAIL_DSC ? (
-                      <FaSortDown className="inline" />
-                    ) : (
-                      <FaSort className="inline" />
-                    )}
-                  </div>
-                </th>
-                <th>Account Type</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedEmployees.map((employee) => (
-                <tr key={employee.username}>
-                  <td>
-                    <div>{employee.photo}</div>
-                  </td>
-                  <td>{employee.name}</td>
-                  <td>{employee.username}</td>
-                  <td>{employee.country}</td>
-                  <td>{employee.email}</td>
-                  <td>{employee.accountType} Member</td>
-                  <td>
-                    <button onClick={() => handleDisplayEditModal(employee)}>
-                      ✏️
-                    </button>
-                    <button>🗑️</button>
-                  </td>
+          <div className="w-full h-full overflow-y-auto">
+            <table className="crud-table w-full">
+              <thead>
+                <tr>
+                  <th>Photo </th>
+                  <th>
+                    <div
+                      className="flex items-center justify-center"
+                      onClick={() =>
+                        setSortState((curr) =>
+                          curr === null
+                            ? SortStateEnum.NAME_DSC
+                            : curr === SortStateEnum.NAME_DSC
+                            ? SortStateEnum.NAME_ASC
+                            : null
+                        )
+                      }
+                    >
+                      Name
+                      {sortState === SortStateEnum.NAME_ASC ? (
+                        <FaSortUp className="inline" />
+                      ) : sortState === SortStateEnum.NAME_DSC ? (
+                        <FaSortDown className="inline" />
+                      ) : (
+                        <FaSort className="inline" />
+                      )}
+                    </div>
+                  </th>
+                  <th>
+                    {" "}
+                    <div
+                      className="flex items-center justify-center"
+                      onClick={() =>
+                        setSortState((curr) =>
+                          curr === null
+                            ? SortStateEnum.UNAME_DSC
+                            : curr === SortStateEnum.UNAME_DSC
+                            ? SortStateEnum.UNAME_ASC
+                            : null
+                        )
+                      }
+                    >
+                      Username
+                      {sortState === SortStateEnum.UNAME_ASC ? (
+                        <FaSortUp className="inline" />
+                      ) : sortState === SortStateEnum.UNAME_DSC ? (
+                        <FaSortDown className="inline" />
+                      ) : (
+                        <FaSort className="inline" />
+                      )}
+                    </div>
+                  </th>
+                  <th>
+                    {" "}
+                    <div
+                      className="flex items-center justify-center"
+                      onClick={() =>
+                        setSortState((curr) =>
+                          curr === null
+                            ? SortStateEnum.COUNTRY_DSC
+                            : curr === SortStateEnum.COUNTRY_DSC
+                            ? SortStateEnum.COUNTRY_ASC
+                            : null
+                        )
+                      }
+                    >
+                      Country
+                      {sortState === SortStateEnum.COUNTRY_ASC ? (
+                        <FaSortUp className="inline" />
+                      ) : sortState === SortStateEnum.COUNTRY_DSC ? (
+                        <FaSortDown className="inline" />
+                      ) : (
+                        <FaSort className="inline" />
+                      )}
+                    </div>
+                  </th>
+                  <th>
+                    {" "}
+                    <div
+                      className="flex items-center justify-center"
+                      onClick={() =>
+                        setSortState((curr) =>
+                          curr === null
+                            ? SortStateEnum.EMAIL_DSC
+                            : curr === SortStateEnum.EMAIL_DSC
+                            ? SortStateEnum.EMAIL_ASC
+                            : null
+                        )
+                      }
+                    >
+                      Email
+                      {sortState === SortStateEnum.EMAIL_ASC ? (
+                        <FaSortUp className="inline" />
+                      ) : sortState === SortStateEnum.EMAIL_DSC ? (
+                        <FaSortDown className="inline" />
+                      ) : (
+                        <FaSort className="inline" />
+                      )}
+                    </div>
+                  </th>
+                  <th>Account Type</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {searchUsers(
+                  sortedEmployees.slice(
+                    currentPageRange[0],
+                    currentPageRange[1]
+                  ),
+                  searchKey
+                ).map((employee) => (
+                  <tr key={employee.username}>
+                    <td>
+                      <div>{employee.photo}</div>
+                    </td>
+                    <td>{employee.name}</td>
+                    <td>{employee.username}</td>
+                    <td>{employee.country}</td>
+                    <td>{employee.email}</td>
+                    <td>{employee.accountType} Member</td>
+                    <td>
+                      <button onClick={() => handleDisplayEditModal(employee)}>
+                        ✏️
+                      </button>
+                      <button>🗑️</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="w-full text-center">
+          {currentPageRange[0] !== 0 && (
+            <FaArrowLeft
+              className="inline mx-2 cursor-pointer"
+              onClick={() =>
+                setCurrentPageRange((prev) => [
+                  prev[0] - pageSize,
+                  prev[1] - pageSize,
+                ])
+              }
+            />
+          )}
+          Page {Math.floor(currentPageRange[0] / pageSize) + 1} out of{" "}
+          {Math.floor(sortedEmployees.length / pageSize)}
+          {!(currentPageRange[1] + pageSize > sortedEmployees.length) && (
+            <FaArrowRight
+              className="inline mx-2 cursor-pointer"
+              onClick={() =>
+                setCurrentPageRange((prev) => [
+                  prev[0] + pageSize,
+                  prev[1] + pageSize,
+                ])
+              }
+            />
+          )}
         </div>
       </main>
       {showModal && (
